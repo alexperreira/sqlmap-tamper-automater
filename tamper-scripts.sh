@@ -19,6 +19,9 @@ url="$1"
 data='{"id":1}'
 headers="Content-Type: application/json"
 
+# Function to handle Ctrl+C
+trap "echo 'Scan interrupted by user. Exiting...'; exit 1" SIGINT
+
 # Iterate through each tamper script
 for script in $(find "$tamper_dir" -name "*.py" -type f); do
 	# Extract the script name without path and extension
@@ -33,7 +36,7 @@ for script in $(find "$tamper_dir" -name "*.py" -type f); do
 		continue
 	fi
 	
-	echo "Starting SQLmap with tamper script: $tamper_name at $(date '+%Y-%m-%d %H:%M:%S')" >> "$output_file"
+	echo "Starting SQLmap with tamper script: $tamper_name at $(date '+%Y-%m-%d %H:%M:%S')"
 
 	# Run SQLmap and save output to the file
 	sqlmap -u "$url" \
