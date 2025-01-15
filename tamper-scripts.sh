@@ -20,7 +20,7 @@ data='{"id":1}'
 headers="Content-Type: application/json"
 
 # Function to handle Ctrl+C
-trap "echo 'Scan interrupted by user. Exiting...'; exit 1" SIGINT
+trap "echo 'Scan interrupted by user. Cleaning up...'; rm -f \"$output_file\"; exit 1" SIGINT
 
 # Iterate through each tamper script
 for script in $(find "$tamper_dir" -name "*.py" -type f); do
