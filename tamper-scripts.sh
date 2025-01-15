@@ -22,6 +22,15 @@ headers="Content-Type: application/json"
 # Function to handle Ctrl+C
 trap "echo 'Scan interrupted by user. Cleaning up...'; rm -f \"$output_file\"; exit 1" SIGINT
 
+# Function to check if the server is reachable
+function check_server {
+	response=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+	if [[ "$response" -lt 200 || "$response" -ge 300 ]]; then
+		echo "Server at $url is unreachable (HTTP status $response). Exiting..."
+		exit 1
+	fi 
+}
+
 # Iterate through each tamper script
 for script in $(find "$tamper_dir" -name "*.py" -type f); do
 	# Extract the script name without path and extension
