@@ -31,10 +31,18 @@ function check_server {
 	fi 
 }
 
+# Check server connectivity before starting the scan
+check_server
+
+
 # Iterate through each tamper script
 for script in $(find "$tamper_dir" -name "*.py" -type f); do
 	# Extract the script name without path and extension
+	original_name=$(basename "$script" .py)
 	tamper_name=$(basename "$script" .py | sed 's/[^a-zA-Z0-9_-]/_/g')
+
+	# Log original and sanitized names
+	echo "Original name: $original_name, Sanitized name: $tamper_name" | tee -a "$skipped_log"
 
 	# Define the output file
 	output_file="${output_dir}/${tamper_name}_results.txt"
@@ -47,6 +55,9 @@ for script in $(find "$tamper_dir" -name "*.py" -type f); do
 	
 	echo "Starting SQLmap with tamper script: $tamper_name at $(date '+%Y-%m-%d %H:%M:%S')"
 
+	# Check server connectivity before running SQLmap
+	check_server
+
 	# Run SQLmap and save output to the file
 	sqlmap -u "$url" \
 		--data="$data" \
@@ -57,8 +68,11 @@ for script in $(find "$tamper_dir" -name "*.py" -type f); do
 		--batch \
 		--output-dir="$output_dir" >> "$output_file" 2>&1 
 
+	# Check server connectivity after running SQLmap
+	check_server
+
 	# Check if vulnerabilities were detected
-	if grep -q "the back-end DBMS is" "$output_file"; then
+	if grep -q "injection" "$output_file"; then
 		echo "Tamper script $tamper_name successfully detected a vulnerability!" >> "$output_file"
 	else
 		echo "No vulnerability detected with tamper script $tamper_name." >> "$output_file"
